@@ -41,18 +41,42 @@ async function run() {
         const toolsCollection = client.db('picaso-painting-brush').collection('tools')
         const bookingCollection = client.db('picaso-painting-brush').collection('booking')
         const userCollection = client.db('picaso-painting-brush').collection('users')
+        const reviewCollection = client.db('picaso-painting-brush').collection('review')
+        const myprofileCollection = client.db('picaso-painting-brush').collection('myprofile')
+
+        // verifyadmin
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requesterAccount = await userCollection.findOne({ email: requester })
+            if (requesterAccount.role === 'admin') {
+                next();
+            }
+            else {
+                res.status(403).send({ message: 'forbidden' })
+            }
+        }
+
         app.get('/tools', async (req, res) => {
             const query = {}
-            // const cursor = toolsCollection.find(query)
-            // const tools = await cursor.toArray()
             const tools = await toolsCollection.find(query).toArray()
             res.send(tools)
+        })
+        app.delete('/tools/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: ObjectId(id) }
+            const result = await toolsCollection.deleteOne(query);
+            res.send(result);
         })
         app.get('/tools/:id', async (req, res) => {
             const id = req.params.id
             const query = { _id: ObjectId(id) }
             const tool = await toolsCollection.findOne(query)
             res.send(tool)
+        })
+        app.post('/tools', verifyJWT, verifyAdmin, async (req, res) => {
+            const product = req.body;
+            const result = await toolsCollection.insertOne(product)
+            res.send(result)
         })
         app.put('/tools/:id', async (req, res) => {
             const id = req.params.id
@@ -102,24 +126,49 @@ async function run() {
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
             res.send({ result, token })
         })
-        app.put('/user/admin/:email', verifyJWT, async (req, res) => {
+        // ===important for next==========
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email
+            const user = await userCollection.findOne({ email: email })
+            const isAdmin = user.role === 'admin'
+            res.send({ admin: isAdmin })
+        })
+        app.put('/user/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
             const email = req.params.email;
-
             const filter = { email: email };
-
             const updateDoc = {
                 $set: { role: 'admin' },
             };
             const result = await userCollection.updateOne(filter, updateDoc)
-
             res.send(result)
+
+
+
         })
         app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollection.find().toArray();
             res.send(users)
         })
+        // review
+
+        app.post('/review', async (req, res) => {
+            const review = req.body;
+            const result = await reviewCollection.insertOne(review)
+            res.send(result)
+        })
 
 
+        app.get('/review', async (req, res) => {
+            const query = {}
+            const review = await reviewCollection.find(query).toArray()
+            res.send(review)
+        })
+        // myprofile
+        app.post('/myprofile', verifyJWT, async (req, res) => {
+            const myProfile = req.body;
+            const result = await myprofileCollection.insertOne(myProfile)
+            res.send(result)
+        })
     }
     finally {
 

@@ -42,7 +42,7 @@ async function run() {
         const bookingCollection = client.db('picaso-painting-brush').collection('booking')
         const userCollection = client.db('picaso-painting-brush').collection('users')
         const reviewCollection = client.db('picaso-painting-brush').collection('review')
-        const myprofileCollection = client.db('picaso-painting-brush').collection('myprofile')
+
 
         // verifyadmin
         const verifyAdmin = async (req, res, next) => {
@@ -113,7 +113,18 @@ async function run() {
             }
 
         })
-        // user
+        app.get('/bookings', async (req, res) => {
+            const query = {}
+            const order = await bookingCollection.find(query).toArray()
+            res.send(order)
+        })
+
+
+
+
+        // user collection
+
+
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
             const user = req.body
@@ -149,6 +160,14 @@ async function run() {
             const users = await userCollection.find().toArray();
             res.send(users)
         })
+        // get user by email
+        app.get('/user/:email', async (req, res) => {
+            const email = req.params.email
+            const query = { email: email }
+            const user = await userCollection.findOne(query)
+            res.send(user)
+        })
+
         // review
 
         app.post('/review', async (req, res) => {
@@ -163,12 +182,7 @@ async function run() {
             const review = await reviewCollection.find(query).toArray()
             res.send(review)
         })
-        // myprofile
-        app.post('/myprofile', verifyJWT, async (req, res) => {
-            const myProfile = req.body;
-            const result = await myprofileCollection.insertOne(myProfile)
-            res.send(result)
-        })
+
     }
     finally {
 

@@ -98,7 +98,7 @@ async function run() {
 
             res.send(result)
         })
-        // booking
+        // booking api
         app.post('/booking', async (req, res) => {
             const booking = req.body;
             const result = await bookingCollection.insertOne(booking)
@@ -160,11 +160,7 @@ async function run() {
             res.send(result)
         })
 
-
-
-
-        // user collection
-
+        // user collection api
 
         app.put('/user/:email', async (req, res) => {
             const email = req.params.email;
@@ -201,7 +197,7 @@ async function run() {
             const users = await userCollection.find().toArray();
             res.send(users)
         })
-        // get user by email
+        // get user by email api
         app.get('/user/:email', async (req, res) => {
             const email = req.params.email
             const query = { email: email }
@@ -209,7 +205,7 @@ async function run() {
             res.send(user)
         })
 
-        // review
+        // review api
 
         app.post('/review', async (req, res) => {
             const review = req.body;
@@ -223,7 +219,7 @@ async function run() {
             const review = await reviewCollection.find(query).toArray()
             res.send(review)
         })
-        // payment
+        // payment api
 
         app.post('/create-payment-intent', async (req, res) => {
             const product = req.body;

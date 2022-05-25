@@ -45,6 +45,7 @@ async function run() {
         const bookingCollection = client.db('picaso-painting-brush').collection('booking')
         const userCollection = client.db('picaso-painting-brush').collection('users')
         const reviewCollection = client.db('picaso-painting-brush').collection('review')
+        const paymentCollection = client.db('picaso-painting-brush').collection('payments')
 
 
         // verifyadmin
@@ -134,6 +135,31 @@ async function run() {
             res.send(booking)
         })
 
+        app.patch('/booking/:id', async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId
+                }
+            }
+            const result = await paymentCollection.insertOne(payment)
+            const updatedBooking = await bookingCollection.updateOne(filter, updatedDoc)
+
+            res.send(updatedDoc)
+        })
+        app.patch('/shipped/:id', async (req, res) => {
+            const id = req.params.id
+            const filter = { _id: ObjectId(id) }
+            const updateDoc = {
+                $set: { shipped: true }
+            }
+            const result = await bookingCollection.updateOne(filter, updateDoc)
+            res.send(result)
+        })
+
 
 
 
@@ -152,7 +178,7 @@ async function run() {
             const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
             res.send({ result, token })
         })
-        // ===important for next==========
+
         app.get('/admin/:email', async (req, res) => {
             const email = req.params.email
             const user = await userCollection.findOne({ email: email })
